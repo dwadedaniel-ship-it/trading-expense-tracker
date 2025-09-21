@@ -223,12 +223,12 @@
           <input type="number" id="dbTotalEvaluations" value="5" min="0">
         </div>
         <div class="row">
-          <span class="label">Funded Rate</span>
-          <input type="text" id="dbFundedRate" value="67%">
+          <span class="label">Funded Accounts</span>
+          <input type="number" id="dbFundedAccounts" value="3" min="0">
         </div>
         <div class="row">
-          <span class="label">Payout Rate</span>
-          <input type="text" id="dbPayoutRate" value="100%">
+          <span class="label">Accounts Paid Out</span>
+          <input type="number" id="dbAccountsPaidOut" value="3" min="0">
         </div>
         <div class="row">
           <span class="label">Cost Per Eval</span>
@@ -243,29 +243,24 @@
           <input type="text" id="dbAvgPayout" value="$1,200">
         </div>
         <div class="row">
-          <span class="label">Per Payout</span>
-          <input type="text" id="dbPerPayout" value="$1,200">
+          <span class="label">Monthly Per Account</span>
+          <input type="text" id="dbMonthlyPerAccount" value="$1,200">
         </div>
       </div>
 
       <!-- Monthly Income Row -->
       <div class="monthly-income-row">
         <span class="label">Monthly Income Potential</span>
-        <span class="value" id="monthlyIncome">$7,200.00</span>
+        <span class="value" id="monthlyIncome">$3,600.00</span>
       </div>
     </div>
   </div>
 
   <script>
-    // Helper functions to parse currency and percentage inputs
+    // Helper functions to parse currency inputs
     function parseCurrency(value) {
       if (typeof value === 'number') return value;
       return parseFloat(value.replace(/[$,]/g, '')) || 0;
-    }
-
-    function parsePercentage(value) {
-      if (typeof value === 'number') return value / 100;
-      return parseFloat(value.replace('%', '')) / 100 || 0;
     }
 
     function formatCurrency(value) {
@@ -283,26 +278,25 @@
     
     // Calculate and update all results
     function calculateResults() {
-      // Get database values
+      // Get input values
       const totalEvals = parseFloat(document.getElementById('dbTotalEvaluations').value) || 0;
-      const fundedRate = parsePercentage(document.getElementById('dbFundedRate').value);
-      const payoutRate = parsePercentage(document.getElementById('dbPayoutRate').value);
+      const fundedAccounts = parseFloat(document.getElementById('dbFundedAccounts').value) || 0;
+      const accountsPaidOut = parseFloat(document.getElementById('dbAccountsPaidOut').value) || 0;
       const costPerEval = parseCurrency(document.getElementById('dbCostPerEval').value);
       const costPerFunded = parseCurrency(document.getElementById('dbCostPerFunded').value);
       const avgPayout = parseCurrency(document.getElementById('dbAvgPayout').value);
-      const perPayout = parseCurrency(document.getElementById('dbPerPayout').value);
+      const monthlyPerAccount = parseCurrency(document.getElementById('dbMonthlyPerAccount').value);
       
       // Calculate results
-      const totalFundedAccounts = Math.round(totalEvals * fundedRate);
-      const totalExpenses = totalEvals * costPerEval;
-      const totalPayoutAmount = totalFundedAccounts * avgPayout;
+      const totalExpenses = (totalEvals * costPerEval) + (fundedAccounts * costPerFunded);
+      const totalPayoutAmount = accountsPaidOut * avgPayout;
       const profit = totalPayoutAmount - totalExpenses;
       const roi = totalExpenses > 0 ? (profit / totalExpenses) : 0;
-      const monthlyIncome = totalFundedAccounts * perPayout * 2; // 2 payouts per month
+      const monthlyIncome = fundedAccounts * monthlyPerAccount;
       
       // Update results display
       document.getElementById('totalEvaluations').textContent = totalEvals;
-      document.getElementById('totalFundedAccounts').textContent = totalFundedAccounts;
+      document.getElementById('totalFundedAccounts').textContent = fundedAccounts;
       document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
       document.getElementById('totalPayoutAmount').textContent = formatCurrency(totalPayoutAmount);
       document.getElementById('profit').textContent = formatCurrency(profit);
@@ -321,33 +315,22 @@
       }
     }
     
-    // Add event listeners to all database inputs
+    // Add event listeners to all inputs
     document.getElementById('dbTotalEvaluations').addEventListener('input', calculateResults);
-    document.getElementById('dbFundedRate').addEventListener('input', calculateResults);
-    document.getElementById('dbPayoutRate').addEventListener('input', calculateResults);
+    document.getElementById('dbFundedAccounts').addEventListener('input', calculateResults);
+    document.getElementById('dbAccountsPaidOut').addEventListener('input', calculateResults);
     document.getElementById('dbCostPerEval').addEventListener('input', calculateResults);
     document.getElementById('dbCostPerFunded').addEventListener('input', calculateResults);
     document.getElementById('dbAvgPayout').addEventListener('input', calculateResults);
-    document.getElementById('dbPerPayout').addEventListener('input', calculateResults);
+    document.getElementById('dbMonthlyPerAccount').addEventListener('input', calculateResults);
     
     // Format currency inputs on blur
-    const currencyInputs = ['dbCostPerEval', 'dbCostPerFunded', 'dbAvgPayout', 'dbPerPayout'];
+    const currencyInputs = ['dbCostPerEval', 'dbCostPerFunded', 'dbAvgPayout', 'dbMonthlyPerAccount'];
     currencyInputs.forEach(id => {
       document.getElementById(id).addEventListener('blur', function() {
         const value = parseCurrency(this.value);
         if (!isNaN(value)) {
           this.value = formatCurrency(value);
-        }
-      });
-    });
-    
-    // Format percentage inputs on blur
-    const percentInputs = ['dbFundedRate', 'dbPayoutRate'];
-    percentInputs.forEach(id => {
-      document.getElementById(id).addEventListener('blur', function() {
-        const value = parsePercentage(this.value);
-        if (!isNaN(value)) {
-          this.value = formatPercentage(value);
         }
       });
     });
